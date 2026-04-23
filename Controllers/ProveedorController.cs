@@ -17,16 +17,31 @@ namespace AlmacenMis.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Proveedor>>> ObtenerTodos()
+        public async Task<ActionResult> ObtenerTodos()
         {
-            var proveedores = await _context.Proveedores.ToListAsync();
+            var proveedores = await _context.Proveedores
+                .Select(p => new
+                {
+                    p.Código,
+                    p.nombre,
+                    p.Estado
+                })
+                .ToListAsync();
             return Ok(proveedores);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Proveedor>> ObtenerPorId(int id)
+        public async Task<ActionResult> ObtenerPorId(int id)
         {
-            var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.id_proveedor == id);
+            var proveedor = await _context.Proveedores
+                .Where(p => p.id_proveedor == id)
+                .Select(p => new
+                {
+                    p.Código,
+                    p.nombre,
+                    p.Estado
+                })
+                .FirstOrDefaultAsync();
             if (proveedor is null)
             {
                 return NotFound($"No se encontro el proveedor con id {id}.");

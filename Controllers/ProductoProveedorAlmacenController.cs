@@ -17,16 +17,35 @@ namespace AlmacenMis.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductoProveedorAlmacen>>> ObtenerTodos()
+        public async Task<ActionResult> ObtenerTodos()
         {
-            var relaciones = await _context.ProductoProveedorAlmacenes.ToListAsync();
+            var relaciones = await _context.ProductoProveedorAlmacenes
+                .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
+                .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new { rp.r, rp.p, pr })
+                .Join(_context.Almacenes, rpp => rpp.r.almacen_id, a => a.almacen_id, (rpp, a) => new
+                {
+                    Producto = rpp.p.Nombre,
+                    Proveedor = rpp.pr.nombre,
+                    Almacen = a.nombre
+                })
+                .ToListAsync();
             return Ok(relaciones);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<ProductoProveedorAlmacen>> ObtenerPorId(int id)
+        public async Task<ActionResult> ObtenerPorId(int id)
         {
-            var relacion = await _context.ProductoProveedorAlmacenes.FirstOrDefaultAsync(r => r.id == id);
+            var relacion = await _context.ProductoProveedorAlmacenes
+                .Where(r => r.id == id)
+                .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
+                .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new { rp.r, rp.p, pr })
+                .Join(_context.Almacenes, rpp => rpp.r.almacen_id, a => a.almacen_id, (rpp, a) => new
+                {
+                    Producto = rpp.p.Nombre,
+                    Proveedor = rpp.pr.nombre,
+                    Almacen = a.nombre
+                })
+                .FirstOrDefaultAsync();
             if (relacion is null)
             {
                 return NotFound($"No se encontro la relacion producto-proveedor-almacen con id {id}.");

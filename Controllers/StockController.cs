@@ -17,16 +17,33 @@ namespace AlmacenMis.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Stock>>> ObtenerTodos()
+        public async Task<ActionResult> ObtenerTodos()
         {
-            var stocks = await _context.Stocks.ToListAsync();
+            var stocks = await _context.Stocks
+                .Join(_context.Productos, s => s.producto_id, p => p.id_Producto, (s, p) => new { s, p })
+                .Join(_context.Almacenes, sp => sp.s.almacen_id, a => a.almacen_id, (sp, a) => new
+                {
+                    Producto = sp.p.Nombre,
+                    Almacen = a.nombre,
+                    sp.s.cantidad
+                })
+                .ToListAsync();
             return Ok(stocks);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Stock>> ObtenerPorId(int id)
+        public async Task<ActionResult> ObtenerPorId(int id)
         {
-            var stock = await _context.Stocks.FirstOrDefaultAsync(s => s.id == id);
+            var stock = await _context.Stocks
+                .Where(s => s.id == id)
+                .Join(_context.Productos, s => s.producto_id, p => p.id_Producto, (s, p) => new { s, p })
+                .Join(_context.Almacenes, sp => sp.s.almacen_id, a => a.almacen_id, (sp, a) => new
+                {
+                    Producto = sp.p.Nombre,
+                    Almacen = a.nombre,
+                    sp.s.cantidad
+                })
+                .FirstOrDefaultAsync();
             if (stock is null)
             {
                 return NotFound($"No se encontro el stock con id {id}.");

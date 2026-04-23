@@ -17,16 +17,31 @@ namespace AlmacenMis.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductoProveedor>>> ObtenerTodos()
+        public async Task<ActionResult> ObtenerTodos()
         {
-            var relaciones = await _context.ProductoProveedores.ToListAsync();
+            var relaciones = await _context.ProductoProveedores
+                .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
+                .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new
+                {
+                    Producto = rp.p.Nombre,
+                    Proveedor = pr.nombre
+                })
+                .ToListAsync();
             return Ok(relaciones);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<ProductoProveedor>> ObtenerPorId(int id)
+        public async Task<ActionResult> ObtenerPorId(int id)
         {
-            var relacion = await _context.ProductoProveedores.FirstOrDefaultAsync(r => r.id == id);
+            var relacion = await _context.ProductoProveedores
+                .Where(r => r.id == id)
+                .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
+                .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new
+                {
+                    Producto = rp.p.Nombre,
+                    Proveedor = pr.nombre
+                })
+                .FirstOrDefaultAsync();
             if (relacion is null)
             {
                 return NotFound($"No se encontro la relacion producto-proveedor con id {id}.");

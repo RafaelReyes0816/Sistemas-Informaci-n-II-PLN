@@ -17,16 +17,31 @@ namespace AlmacenMis.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Almacen>>> ObtenerTodos()
+        public async Task<ActionResult> ObtenerTodos()
         {
-            var almacenes = await _context.Almacenes.ToListAsync();
+            var almacenes = await _context.Almacenes
+                .Select(a => new
+                {
+                    a.Código,
+                    a.nombre,
+                    a.Estado
+                })
+                .ToListAsync();
             return Ok(almacenes);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Almacen>> ObtenerPorId(int id)
+        public async Task<ActionResult> ObtenerPorId(int id)
         {
-            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.almacen_id == id);
+            var almacen = await _context.Almacenes
+                .Where(a => a.almacen_id == id)
+                .Select(a => new
+                {
+                    a.Código,
+                    a.nombre,
+                    a.Estado
+                })
+                .FirstOrDefaultAsync();
             if (almacen is null)
             {
                 return NotFound($"No se encontro el almacen con id {id}.");
