@@ -16,7 +16,7 @@ namespace AlmacenMis.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("Get Admin")]
         public async Task<ActionResult> ObtenerTodos()
         {
             var almacenes = await _context.Almacenes
@@ -29,12 +29,47 @@ namespace AlmacenMis.Controllers
                 .ToListAsync();
             return Ok(almacenes);
         }
+        [HttpGet("QueryNavegacion")]
+        public async Task<ActionResult> QueryNavegacion()
+        {
+            var query = await (
+                from a in _context.Almacenes
+                join pa in _context.ProductoAlmacenes on a.almacen_id equals pa.almacen_id
+                join p in _context.Productos on pa.producto_id equals p.id_Producto
+                select new
+                {
+                    Almacen = a.nombre,
+                    CodigoAlmacen = a.Código,
+                    Producto = p.Nombre,
+                    CodigoProducto = p.Código,
+                    EstadoAlmacen = a.Estado
+                })
+                .ToListAsync();
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult> ObtenerPorId(int id)
+            return Ok(query);
+        }
+
+        [HttpGet("ListaReal")]
+        public async Task<ActionResult> GetAlmacenReal()
+        {
+            var almacenes = await (
+                from a in _context.Almacenes
+                where a.Estado != "Inactivo"
+                select new
+                {
+                    a.Código,
+                    a.nombre,
+                    a.Estado
+                }).ToListAsync();
+
+            return Ok(almacenes);
+        }
+
+        [HttpGet("{codigo}")]
+        public async Task<ActionResult> ObtenerPorCodigo(string codigo)
         {
             var almacen = await _context.Almacenes
-                .Where(a => a.almacen_id == id)
+                .Where(a => a.Código == codigo)
                 .Select(a => new
                 {
                     a.Código,
@@ -44,7 +79,7 @@ namespace AlmacenMis.Controllers
                 .FirstOrDefaultAsync();
             if (almacen is null)
             {
-                return NotFound($"No se encontro el almacen con id {id}.");
+                return NotFound($"No se encontro el almacen con codigo {codigo}.");
             }
 
             return Ok(almacen);
@@ -55,7 +90,7 @@ namespace AlmacenMis.Controllers
         {
             _context.Almacenes.Add(nuevoAlmacen);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(ObtenerPorId), new { id = nuevoAlmacen.almacen_id }, nuevoAlmacen);
+            return CreatedAtAction(nameof(ObtenerPorCodigo), new { codigo = nuevoAlmacen.Código }, nuevoAlmacen);
         }
 
         [HttpPut("{id:int}")]
@@ -75,16 +110,17 @@ namespace AlmacenMis.Controllers
             return Ok(almacen);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Eliminar(int id)
+        [HttpDelete("{codigo}")]
+        public async Task<IActionResult> Eliminar(string codigo)
         {
-            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.almacen_id == id);
+            var almacen = await _context.Almacenes
+                .FirstOrDefaultAsync(a => a.Código == codigo);
             if (almacen is null)
             {
-                return NotFound($"No se encontro el almacen con id {id}.");
+                return NotFound($"No se encontro el almacen con codigo {codigo}.");
             }
 
-            _context.Almacenes.Remove(almacen);
+            almacen.Estado = "Inactivo";
             await _context.SaveChangesAsync();
             return NoContent();
         }

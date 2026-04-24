@@ -83,7 +83,13 @@ namespace AlmacenMis.Controllers
                 return NotFound($"No se encontro la relacion producto-almacen con id {id}.");
             }
 
-            _context.ProductoAlmacenes.Remove(relacion);
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.almacen_id == relacion.almacen_id);
+            if (almacen is null)
+            {
+                return NotFound("No se encontro el almacen asociado a la relacion.");
+            }
+
+            almacen.Estado = "Inactivo";
             await _context.SaveChangesAsync();
             return NoContent();
         }
