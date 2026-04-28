@@ -30,11 +30,27 @@ namespace AlmacenMis.Controllers
             return Ok(proveedores);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult> ObtenerPorId(int id)
+        [HttpGet("ListaReal")]
+        public async Task<ActionResult> ObtenerListaReal()
         {
             var proveedor = await _context.Proveedores
-                .Where(p => p.id_proveedor == id)
+                .Where(p => p.Estado != "Inactivo")
+                .Select(p => new
+                {
+                    p.Código,
+                    p.nombre,
+                    p.Estado
+                })
+                .ToListAsync();
+
+            return Ok(proveedor);
+        }
+
+        [HttpGet("{codigo}")]
+        public async Task<ActionResult> ObtenerPorCodigo(string codigo)
+        {
+            var proveedor = await _context.Proveedores
+                .Where(p => p.Código == codigo)
                 .Select(p => new
                 {
                     p.Código,
@@ -44,7 +60,7 @@ namespace AlmacenMis.Controllers
                 .FirstOrDefaultAsync();
             if (proveedor is null)
             {
-                return NotFound($"No se encontro el proveedor con id {id}.");
+                return NotFound($"No se encontro el proveedor con codigo {codigo}.");
             }
 
             return Ok(proveedor);
@@ -55,16 +71,16 @@ namespace AlmacenMis.Controllers
         {
             _context.Proveedores.Add(nuevoProveedor);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(ObtenerPorId), new { id = nuevoProveedor.id_proveedor }, nuevoProveedor);
+            return CreatedAtAction(nameof(ObtenerPorCodigo), new { codigo = nuevoProveedor.Código }, nuevoProveedor);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<Proveedor>> Actualizar(int id, [FromBody] Proveedor proveedorActualizado)
+        [HttpPut("{codigo}")]
+        public async Task<ActionResult<Proveedor>> Actualizar(string codigo, [FromBody] Proveedor proveedorActualizado)
         {
-            var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.id_proveedor == id);
+            var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.Código == codigo);
             if (proveedor is null)
             {
-                return NotFound($"No se encontro el proveedor con id {id}.");
+                return NotFound($"No se encontro el proveedor con codigo {codigo}.");
             }
 
             proveedor.Código = proveedorActualizado.Código;
@@ -75,16 +91,16 @@ namespace AlmacenMis.Controllers
             return Ok(proveedor);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Eliminar(int id)
+        [HttpDelete("{codigo}")]
+        public async Task<IActionResult> Eliminar(string codigo)
         {
-            var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.id_proveedor == id);
+            var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.Código == codigo);
             if (proveedor is null)
             {
-                return NotFound($"No se encontro el proveedor con id {id}.");
+                return NotFound($"No se encontro el proveedor con codigo {codigo}.");
             }
 
-            _context.Proveedores.Remove(proveedor);
+            proveedor.Estado = "Inactivo";
             await _context.SaveChangesAsync();
             return NoContent();
         }

@@ -20,11 +20,28 @@ namespace AlmacenMis.Controllers
         public async Task<ActionResult> ObtenerTodos()
         {
             var relaciones = await _context.ProductoProveedores
+                .Where(r => r.Estado != "Inactivo")
                 .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
                 .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new
                 {
                     Producto = rp.p.Nombre,
                     Proveedor = pr.nombre
+                })
+                .ToListAsync();
+            return Ok(relaciones);
+        }
+
+        [HttpGet("ListaReal")]
+        public async Task<ActionResult> ObtenerListaReal()
+        {
+            var relaciones = await _context.ProductoProveedores
+                .Where(r => r.Estado != "Inactivo")
+                .Join(_context.Productos, r => r.producto_id, p => p.id_Producto, (r, p) => new { r, p })
+                .Join(_context.Proveedores, rp => rp.r.proveedor_id, pr => pr.id_proveedor, (rp, pr) => new
+                {
+                    Producto = rp.p.Nombre,
+                    Proveedor = pr.nombre,
+                    rp.r.Estado
                 })
                 .ToListAsync();
             return Ok(relaciones);
@@ -53,6 +70,7 @@ namespace AlmacenMis.Controllers
         [HttpPost]
         public async Task<ActionResult<ProductoProveedor>> Crear([FromBody] ProductoProveedor nuevaRelacion)
         {
+            nuevaRelacion.Estado = "Activo";
             _context.ProductoProveedores.Add(nuevaRelacion);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(ObtenerPorId), new { id = nuevaRelacion.id }, nuevaRelacion);
@@ -83,7 +101,7 @@ namespace AlmacenMis.Controllers
                 return NotFound($"No se encontro la relacion producto-proveedor con id {id}.");
             }
 
-            _context.ProductoProveedores.Remove(relacion);
+            relacion.Estado = "Inactivo";
             await _context.SaveChangesAsync();
             return NoContent();
         }

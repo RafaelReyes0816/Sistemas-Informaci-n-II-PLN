@@ -9,5 +9,6 @@ namespace AlmacenMis.Dominio
         public int producto_id { get; set; }
         public int proveedor_id { get; set; }
         public int almacen_id { get; set; }
+        public string Estado { get; set; } = "Activo";
     }
 }

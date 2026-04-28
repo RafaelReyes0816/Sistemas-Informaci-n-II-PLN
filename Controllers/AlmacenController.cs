@@ -93,13 +93,13 @@ namespace AlmacenMis.Controllers
             return CreatedAtAction(nameof(ObtenerPorCodigo), new { codigo = nuevoAlmacen.Código }, nuevoAlmacen);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<Almacen>> Actualizar(int id, [FromBody] Almacen almacenActualizado)
+        [HttpPut("{codigo}")]
+        public async Task<ActionResult<Almacen>> Actualizar(string codigo, [FromBody] Almacen almacenActualizado)
         {
-            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.almacen_id == id);
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.Código == codigo);
             if (almacen is null)
             {
-                return NotFound($"No se encontro el almacen con id {id}.");
+                return NotFound($"No se encontro el almacen con codigo {codigo}.");
             }
 
             almacen.Código = almacenActualizado.Código;

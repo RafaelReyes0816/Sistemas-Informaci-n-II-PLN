@@ -30,11 +30,27 @@ namespace AlmacenMis.Controllers
             return Ok(productos);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult> ObtenerPorId(int id)
+        [HttpGet("ListaReal")]
+        public async Task<ActionResult> ObtenerListaReal()
         {
             var producto = await _context.Productos
-                .Where(p => p.id_Producto == id)
+                .Where(p => p.Estado != "Inactivo")
+                .Select(p => new
+                {
+                    p.Código,
+                    p.Nombre,
+                    p.Estado
+                })
+                .ToListAsync();
+
+            return Ok(producto);
+        }
+
+        [HttpGet("{codigo}")]
+        public async Task<ActionResult> ObtenerPorCodigo(string codigo)
+        {
+            var producto = await _context.Productos
+                .Where(p => p.Código == codigo)
                 .Select(p => new
                 {
                     p.Código,
@@ -44,7 +60,7 @@ namespace AlmacenMis.Controllers
                 .FirstOrDefaultAsync();
             if (producto is null)
             {
-                return NotFound($"No se encontro el producto con id {id}.");
+                return NotFound($"No se encontro el producto con codigo {codigo}.");
             }
 
             return Ok(producto);
@@ -62,16 +78,16 @@ namespace AlmacenMis.Controllers
 
             _context.Productos.Add(nuevoProducto);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(ObtenerPorId), new { id = nuevoProducto.id_Producto }, nuevoProducto);
+            return CreatedAtAction(nameof(ObtenerPorCodigo), new { codigo = nuevoProducto.Código }, nuevoProducto);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<Producto>> Actualizar(int id, [FromBody] Producto productoActualizado)
+        [HttpPut("{codigo}")]
+        public async Task<ActionResult<Producto>> Actualizar(string codigo, [FromBody] Producto productoActualizado)
         {
-            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.id_Producto == id);
+            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.Código == codigo);
             if (producto is null)
             {
-                return NotFound($"No se encontro el producto con id {id}.");
+                return NotFound($"No se encontro el producto con codigo {codigo}.");
             }
 
             if (string.IsNullOrWhiteSpace(productoActualizado.Nombre) ||
@@ -89,16 +105,16 @@ namespace AlmacenMis.Controllers
             return Ok(producto);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Eliminar(int id)
+        [HttpDelete("{codigo}")]
+        public async Task<IActionResult> Eliminar(string codigo)
         {
-            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.id_Producto == id);
+            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.Código == codigo);
             if (producto is null)
             {
-                return NotFound($"No se encontro el producto con id {id}.");
+                return NotFound($"No se encontro el producto con codigo {codigo}.");
             }
 
-            _context.Productos.Remove(producto);
+            producto.Estado = "Inactivo";
             await _context.SaveChangesAsync();
             return NoContent();
         }
