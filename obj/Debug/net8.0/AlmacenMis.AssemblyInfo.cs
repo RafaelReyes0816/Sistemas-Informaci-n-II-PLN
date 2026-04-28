@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AlmacenMis")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fca8e3484cef0fab09eccef6c3a4dd4b1254f0de")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+90bc80230a04ce07c7ac0aa470a7f3ad1834bb95")]
 [assembly: System.Reflection.AssemblyProductAttribute("AlmacenMis")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AlmacenMis")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
